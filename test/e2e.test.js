@@ -889,31 +889,77 @@ const UNWINNABLE_HAND = ["2m", "3m", "4m", "5m", "6m", "7m", "8m", "2p", "3p", "
   const contactInfo = await page.evaluate(() => {
     const contact = document.getElementById("contact-section");
     if (!contact) return null;
-    const link = contact.querySelector("a");
+    const links = Array.from(contact.querySelectorAll("a")).map((a) => ({
+      text: a.textContent.trim(),
+      href: a.getAttribute("href"),
+      target: a.getAttribute("target"),
+      fontWeight: getComputedStyle(a).fontWeight,
+    }));
+    const discordItem = contact.querySelector(".contact-text-item");
     const cs = getComputedStyle(contact);
-    const linkCs = link ? getComputedStyle(link) : null;
     return {
       exists: true,
       hasBorder: cs.borderStyle !== "none" && parseFloat(cs.borderWidth) > 0,
       hasBoxBackground: cs.backgroundColor !== "rgba(0, 0, 0, 0)" && cs.backgroundColor !== "transparent",
-      linkText: link ? link.textContent.trim() : null,
-      linkHref: link ? link.getAttribute("href") : null,
-      linkTarget: link ? link.getAttribute("target") : null,
-      linkFontWeight: linkCs ? linkCs.fontWeight : null,
+      links,
+      discordText: discordItem ? discordItem.textContent.trim() : null,
+      discordIsLink: discordItem ? discordItem.tagName === "A" : null,
     };
   });
-  assert(!!contactInfo && contactInfo.exists, "[v14-항목3] 연락처 칸이 존재함");
-  assert(!contactInfo.hasBorder, "[v14-항목3] 연락처 칸에 테두리(박스)가 없음");
-  assert(!contactInfo.hasBoxBackground, "[v14-항목3] 연락처 칸에 배경(박스)이 없음");
-  assert(contactInfo.linkText === "@marrowhotpot3", `[v14-항목3] 연락처에 "@marrowhotpot3"가 표시됨 (실제: "${contactInfo.linkText}")`);
+  assert(!!contactInfo && contactInfo.exists, "[v16-항목1] 연락처 칸이 존재함");
+  assert(!contactInfo.hasBorder, "[v16-항목1] 연락처 칸에 테두리(박스)가 없음");
+  assert(!contactInfo.hasBoxBackground, "[v16-항목1] 연락처 칸에 배경(박스)이 없음");
+
+  const githubLink = contactInfo.links.find((l) => l.text === "github");
+  assert(!!githubLink, `[v16-항목1] "github" 링크가 표시됨 (실제 링크 목록: ${JSON.stringify(contactInfo.links)})`);
   assert(
-    contactInfo.linkHref === "https://x.com/marrowhotpot3",
-    `[v14-항목3] "@marrowhotpot3"가 실제 X 계정으로 하이퍼링크됨 (실제: "${contactInfo.linkHref}")`
+    githubLink && githubLink.href === "https://github.com/marrowhotpot3/jongdle",
+    `[v16-항목1] "github"가 저장소 주소로 하이퍼링크됨 (실제: "${githubLink && githubLink.href}")`
   );
-  assert(contactInfo.linkTarget === "_blank", "[v14-항목3] X 계정 링크는 새 탭으로 열림");
+  assert(githubLink && githubLink.target === "_blank", "[v16-항목1] github 링크는 새 탭으로 열림");
+
+  const xLink = contactInfo.links.find((l) => l.text === "X");
+  assert(!!xLink, `[v16-항목1] "X" 링크가 표시됨 (실제 링크 목록: ${JSON.stringify(contactInfo.links)})`);
   assert(
-    Number(contactInfo.linkFontWeight) <= 400,
-    `[v14-항목3] "@marrowhotpot3" 글씨체는 볼드가 아님 (실제 font-weight: ${contactInfo.linkFontWeight})`
+    xLink && xLink.href === "https://x.com/marrowhotpot3",
+    `[v16-항목1] "X"가 실제 X 프로필로 하이퍼링크됨 (실제: "${xLink && xLink.href}")`
+  );
+  assert(xLink && xLink.target === "_blank", "[v16-항목1] X 링크는 새 탭으로 열림");
+
+  const mailLink = contactInfo.links.find((l) => l.text === "mail");
+  assert(!!mailLink, `[v16-항목1] "mail" 링크가 표시됨 (실제 링크 목록: ${JSON.stringify(contactInfo.links)})`);
+  assert(
+    mailLink && mailLink.href === "mailto:marrowhotpot3@gmail.com",
+    `[v16-항목1] "mail"이 실제 이메일 주소로 하이퍼링크됨 (실제: "${mailLink && mailLink.href}")`
+  );
+
+  assert(
+    contactInfo.discordText === "Discord: marrowhotpot3",
+    `[v16-항목1] Discord 아이디가 텍스트로 표시됨 (실제: "${contactInfo.discordText}")`
+  );
+  assert(contactInfo.discordIsLink === false, "[v16-항목1] Discord 항목은 클릭 가능한 링크가 아님(대체 방법 없음)");
+
+  assert(
+    contactInfo.links.every((l) => Number(l.fontWeight) <= 400),
+    `[v16-항목1] 연락처 링크 글씨체는 볼드가 아님 (실제: ${JSON.stringify(contactInfo.links.map((l) => l.fontWeight))})`
+  );
+
+  const discordIsButton = await page.evaluate(
+    () => document.getElementById("btn-copy-discord")?.tagName === "BUTTON"
+  );
+  assert(discordIsButton, "[v17-항목1] Discord 항목은 클릭 가능한 button 요소임");
+  await page.evaluate(() => navigator.clipboard.writeText(""));
+  await page.click("#btn-copy-discord");
+  await page.waitForTimeout(100);
+  const discordClip = await page.evaluate(() => navigator.clipboard.readText());
+  assert(discordClip === "marrowhotpot3", `[v17-항목1] Discord 클릭 시 아이디가 클립보드에 복사됨 (실제: "${discordClip}")`);
+  const discordCopiedLabel = await page.evaluate(() => document.getElementById("btn-copy-discord").textContent.trim());
+  assert(discordCopiedLabel === "복사됨!", `[v17-항목1] 복사 직후 "복사됨!" 문구로 잠깐 바뀜 (실제: "${discordCopiedLabel}")`);
+  await page.waitForTimeout(1300);
+  const discordLabelRestored = await page.evaluate(() => document.getElementById("btn-copy-discord").textContent.trim());
+  assert(
+    discordLabelRestored === "Discord: marrowhotpot3",
+    `[v17-항목1] 1.2초 후 원래 문구로 되돌아옴 (실제: "${discordLabelRestored}")`
   );
 
   const contactTitleGone = await page.evaluate(

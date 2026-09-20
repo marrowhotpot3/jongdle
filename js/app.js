@@ -35,6 +35,7 @@
     btnCloseStats: document.getElementById("btn-close-stats"),
     statsGrid: document.getElementById("stats-grid"),
     statsDist: document.getElementById("stats-dist"),
+    btnCopyDiscord: document.getElementById("btn-copy-discord"),
   };
 
   const YAKU_MAP = Object.fromEntries(YAKU_LIST.map((y) => [y.id, y]));
@@ -279,6 +280,55 @@
     });
 
     els.btnTheme.addEventListener("click", toggleTheme);
+
+    if (els.btnCopyDiscord) {
+      els.btnCopyDiscord.addEventListener("click", copyDiscordId);
+    }
+  }
+
+  function fallbackCopyText(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand("copy");
+    } catch (e) {}
+    document.body.removeChild(textarea);
+  }
+
+  function copyDiscordId() {
+    const id = "marrowhotpot3";
+    const btn = els.btnCopyDiscord;
+    if (!btn) return;
+    const originalText = btn.dataset.originalText || btn.textContent;
+    btn.dataset.originalText = originalText;
+
+    const showCopied = () => {
+      btn.textContent = "복사됨!";
+      btn.classList.add("copied");
+      clearTimeout(btn._copyTimer);
+      btn._copyTimer = setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove("copied");
+      }, 1200);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(id)
+        .then(showCopied)
+        .catch(() => {
+          fallbackCopyText(id);
+          showCopied();
+        });
+    } else {
+      fallbackCopyText(id);
+      showCopied();
+    }
   }
 
   function openModal(modalEl) {
