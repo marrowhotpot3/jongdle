@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>작들</title>
+<meta name="description" content="마작 역의 정답 손패를 맞혀보는 게임 — 매일 새로운 역, 무한 모드." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2216%22 fill=%22%2316302a%22/><text x=%2250%22 y=%2266%22 font-size=%2258%22 text-anchor=%22middle%22 fill=%22%23f2e9d8%22 font-family=%22serif%22>役</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Dodum&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <button class="icon-btn" id="btn-help" type="button" aria-haspopup="dialog" aria-label="게임 방법 보기">
+      <span aria-hidden="true">?</span>
+    </button>
+    <h1 class="brand">작들</h1>
+    <div class="topbar-right">
+      <button class="icon-btn" id="btn-stats" type="button" aria-haspopup="dialog" aria-label="통계 보기">
+        <span aria-hidden="true">📊</span>
+      </button>
+      <button class="icon-btn" id="btn-theme" type="button" aria-label="밝은/어두운 테마 전환">
+        <span aria-hidden="true" id="theme-icon">☾</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="mode-tabs" role="tablist" aria-label="게임 모드">
+    <button class="mode-tab" data-mode="daily" role="tab" aria-selected="true" type="button">데일리</button>
+    <button class="mode-tab" data-mode="practice" role="tab" aria-selected="false" type="button">무한 모드</button>
+  </nav>
+
+  <section class="puzzle-info">
+    <span class="badge" id="puzzle-label">오늘의 역</span>
+    <span class="badge badge-muted" id="attempt-label">시도 0/10</span>
+    <button class="badge badge-action" id="btn-view-result" type="button" hidden>결과 보기</button>
+    <button class="badge badge-action" id="btn-new-practice" type="button" hidden>새 문제</button>
+  </section>
+
+  <section class="palette" id="palette" aria-label="마작패 선택 (역키보드)">
+    <div class="palette-row" data-suit="m"></div>
+    <div class="palette-row" data-suit="p"></div>
+    <div class="palette-row" data-suit="s"></div>
+    <div class="palette-row" data-suit="z"></div>
+  </section>
+
+  <section class="yaku-board" id="yaku-board-section" aria-label="역 목록 (제출해서 발견하기 전까지 회색)">
+    <p class="yaku-board-legend">
+      <span class="legend-chip legend-correct">포함된 역</span>
+      <span class="legend-chip legend-orange">연관된 역</span>
+      <span class="legend-chip legend-triedgray">무관한 역</span>
+    </p>
+    <div class="yaku-board-list" id="yaku-board"></div>
+  </section>
+
+  <section class="current-input">
+    <div class="guess-row is-current" id="current-guess-row" aria-live="polite" aria-label="지금 만들고 있는 손패"></div>
+
+    <div class="yaku-popup" id="yaku-popup" hidden aria-live="polite" aria-label="지금 손패로 성립하는 역 (제출 전 자가 확인용, 정답과는 무관)">
+      <div class="yaku-chip-list" id="yaku-popup-chips"></div>
+      <p class="yaku-popup-score" id="yaku-popup-score" hidden></p>
+    </div>
+
+    <div class="guess-actions">
+      <button class="btn btn-ghost" id="btn-clear" type="button">전체 지우기</button>
+      <button class="btn btn-primary" id="btn-submit" type="button" disabled>제출</button>
+    </div>
+  </section>
+
+  <section class="history" id="history" aria-label="제출한 손패 기록 (최신순)"></section>
+
+  <section class="contact-section" id="contact-section" aria-label="연락처">
+    <p class="contact-section-text">
+      <a href="https://x.com/marrowhotpot3" target="_blank" rel="noopener noreferrer">@marrowhotpot3</a>
+    </p>
+  </section>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop" hidden>
+  <div class="modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
+    <div class="modal-head">
+      <h2 id="help-title">게임 방법</h2>
+      <button class="icon-btn" id="btn-close-help" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>작들은 무작위 손패 14장을 맞추는 게임입니다.</p>
+      <ol>
+        <li>화면 아래쪽 <strong>패 버튼들</strong>을 눌러 손패 14장을 채우세요. 고른 패는 만ㆍ통ㆍ삭ㆍ자패 순서로 자동 정렬되고, 다시 누르면 뺄 수 있어요. 반짝이는 패는 도라패에요.</li>
+        <li>패 버튼 위쪽 <strong>"역 목록"</strong>에는 마작 역 28종이 나열돼 있어요. 역 이름 위에 마우스를 올리면(모바일에서는 길게 누르면) 판수ㆍ간단한 설명을 볼 수 있어요.</li>
+        <li>
+          <ul>
+            <li><span class="legend-chip legend-correct">포함된 역</span> 정답 손패가 실제로 성립시키는 바로 그 역이에요.</li>
+            <li><span class="legend-chip legend-orange">연관된 역</span> 정답 손패와 구조적으로 연관은 있지만(예: 혼일색↔청일색, 역패 백ㆍ발ㆍ중↔소삼원ㆍ대삼원), 상위 역에 밀리거나 정답 자체가 아니라서 따로 점수가 매겨지지 않는 역이에요.</li>
+            <li><span class="legend-chip legend-triedgray">무관한 역</span> 제출한 손패가 실제로 성립시켰지만 정답과는 무관한 역이에요.</li>
+          </ul>
+        </li>
+        <li>각 제출 기록 아래에는 화료 점수가 표시돼요. 정답 손패의 점수보다 높은지(▼)ㆍ낮은지(▲)ㆍ같은지(＝)도 함께 알려줘요.</li>
+        <li>어떤 제출에서 <strong>잘못 포함된 역 없이 정답의 역을 전부</strong> 맞히면(그 시도가 성립시키는 역이 정답 손패가 성립시키는 역과 정확히 같으면), 그 시도부터는 손패의 각 패에도 색이 들어가기 시작해요.</li>
+      </ol>
+      <p class="modal-note">데일리 모드는 하루에 한 문제, 한국 시간(KST) 자정에 바뀌어요. 무한 모드는 언제든 새 문제로 다시 도전할 수 있어요.</p>
+    </div>
+  </div>
+
+  <div class="modal" id="stats-modal" role="dialog" aria-modal="true" aria-labelledby="stats-title" hidden>
+    <div class="modal-head">
+      <h2 id="stats-title">데일리 통계</h2>
+      <button class="icon-btn" id="btn-close-stats" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="stats-dist" id="stats-dist"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="result-modal" role="dialog" aria-modal="true" aria-labelledby="result-modal-title" hidden>
+    <div class="modal-head">
+      <h2 id="result-modal-title">정답 공개</h2>
+      <button class="icon-btn" id="btn-close-result" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="result-status" id="result-status"></p>
+      <p class="result-answer-label">정답 손패</p>
+      <div class="guess-row result-answer-row" id="answer-tiles-row"></div>
+      <div class="result-actions">
+        <button class="btn btn-primary" id="btn-share" type="button">결과 공유하기</button>
+        <button class="btn btn-ghost btn-share-x" id="btn-share-x" type="button">X에 공유하기</button>
+        <button class="btn btn-ghost" id="btn-next" type="button" hidden>다음 문제</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/yakuEngine.js"></script>
+<script src="js/tileArt.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
