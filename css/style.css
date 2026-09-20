@@ -626,7 +626,6 @@ button.tile-slot:active { transform: scale(0.94); }
   border-bottom-color: var(--absent);
 }
 
-.tile-btn.tile-btn-dora,
 .tile-slot.tile-slot-dora {
   overflow: hidden;
 }
@@ -635,6 +634,7 @@ button.tile-slot:active { transform: scale(0.94); }
   content: "";
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background-image: linear-gradient(
     100deg,
     transparent 0%,
