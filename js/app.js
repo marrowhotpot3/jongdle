@@ -36,6 +36,7 @@
     statsGrid: document.getElementById("stats-grid"),
     statsDist: document.getElementById("stats-dist"),
     btnCopyDiscord: document.getElementById("btn-copy-discord"),
+    btnCopyMail: document.getElementById("btn-copy-mail"),
   };
 
   const YAKU_MAP = Object.fromEntries(YAKU_LIST.map((y) => [y.id, y]));
@@ -282,7 +283,10 @@
     els.btnTheme.addEventListener("click", toggleTheme);
 
     if (els.btnCopyDiscord) {
-      els.btnCopyDiscord.addEventListener("click", copyDiscordId);
+      els.btnCopyDiscord.addEventListener("click", () => copyTextToClipboard("marrowhotpot3", els.btnCopyDiscord));
+    }
+    if (els.btnCopyMail) {
+      els.btnCopyMail.addEventListener("click", () => copyTextToClipboard("marrowhotpot3@gmail.com", els.btnCopyMail));
     }
   }
 
@@ -300,9 +304,7 @@
     document.body.removeChild(textarea);
   }
 
-  function copyDiscordId() {
-    const id = "marrowhotpot3";
-    const btn = els.btnCopyDiscord;
+  function copyTextToClipboard(text, btn) {
     if (!btn) return;
     const originalText = btn.dataset.originalText || btn.textContent;
     btn.dataset.originalText = originalText;
@@ -319,14 +321,14 @@
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
-        .writeText(id)
+        .writeText(text)
         .then(showCopied)
         .catch(() => {
-          fallbackCopyText(id);
+          fallbackCopyText(text);
           showCopied();
         });
     } else {
-      fallbackCopyText(id);
+      fallbackCopyText(text);
       showCopied();
     }
   }

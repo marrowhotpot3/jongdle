@@ -926,13 +926,6 @@ const UNWINNABLE_HAND = ["2m", "3m", "4m", "5m", "6m", "7m", "8m", "2p", "3p", "
   );
   assert(xLink && xLink.target === "_blank", "[v16-항목1] X 링크는 새 탭으로 열림");
 
-  const mailLink = contactInfo.links.find((l) => l.text === "mail");
-  assert(!!mailLink, `[v16-항목1] "mail" 링크가 표시됨 (실제 링크 목록: ${JSON.stringify(contactInfo.links)})`);
-  assert(
-    mailLink && mailLink.href === "mailto:marrowhotpot3@gmail.com",
-    `[v16-항목1] "mail"이 실제 이메일 주소로 하이퍼링크됨 (실제: "${mailLink && mailLink.href}")`
-  );
-
   assert(
     contactInfo.discordText === "Discord: marrowhotpot3",
     `[v16-항목1] Discord 아이디가 텍스트로 표시됨 (실제: "${contactInfo.discordText}")`
@@ -961,6 +954,22 @@ const UNWINNABLE_HAND = ["2m", "3m", "4m", "5m", "6m", "7m", "8m", "2p", "3p", "
     discordLabelRestored === "Discord: marrowhotpot3",
     `[v17-항목1] 1.2초 후 원래 문구로 되돌아옴 (실제: "${discordLabelRestored}")`
   );
+
+  const mailIsButton = await page.evaluate(() => document.getElementById("btn-copy-mail")?.tagName === "BUTTON");
+  assert(mailIsButton, "[v18-항목1] mail 항목은 클릭 가능한 button 요소임(mailto 링크가 아님)");
+  await page.evaluate(() => navigator.clipboard.writeText(""));
+  await page.click("#btn-copy-mail");
+  await page.waitForTimeout(100);
+  const mailClip = await page.evaluate(() => navigator.clipboard.readText());
+  assert(
+    mailClip === "marrowhotpot3@gmail.com",
+    `[v18-항목1] mail 클릭 시 이메일 주소가 클립보드에 복사됨 (실제: "${mailClip}")`
+  );
+  const mailCopiedLabel = await page.evaluate(() => document.getElementById("btn-copy-mail").textContent.trim());
+  assert(mailCopiedLabel === "복사됨!", `[v18-항목1] 복사 직후 "복사됨!" 문구로 잠깐 바뀜 (실제: "${mailCopiedLabel}")`);
+  await page.waitForTimeout(1300);
+  const mailLabelRestored = await page.evaluate(() => document.getElementById("btn-copy-mail").textContent.trim());
+  assert(mailLabelRestored === "mail", `[v18-항목1] 1.2초 후 원래 문구("mail")로 되돌아옴 (실제: "${mailLabelRestored}")`);
 
   const contactTitleGone = await page.evaluate(
     () => document.querySelector("#contact-section .contact-section-title") === null
