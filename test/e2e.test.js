@@ -1,7 +1,7 @@
 const { chromium } = require("playwright");
 const path = require("path");
 const { YAKU_LIST, sortHand } = require(path.join(__dirname, "..", "js", "data.js"));
-const { pickDailyYaku, todayKstString } = require(path.join(__dirname, "..", "js", "engine.js"));
+const { pickDailyYaku, todayKstString, MAX_ATTEMPTS } = require(path.join(__dirname, "..", "js", "engine.js"));
 const YakuEngine = require(path.join(__dirname, "..", "js", "yakuEngine.js"));
 
 const BASE_URL = "http://localhost:8123";
@@ -617,7 +617,7 @@ const UNWINNABLE_HAND = ["2m", "3m", "4m", "5m", "6m", "7m", "8m", "2p", "3p", "
   );
 
   const attemptLabel = await page.textContent("#attempt-label");
-  assert(attemptLabel.includes("1/10"), `[I5] 시도 횟수 1/10 표시 (실제 "${attemptLabel}")`);
+  assert(attemptLabel.includes(`1/${MAX_ATTEMPTS}`), `[I5] 시도 횟수 1/${MAX_ATTEMPTS} 표시 (실제 "${attemptLabel}")`);
   let attemptCount = 1;
 
   if (discoveryId) {
@@ -629,8 +629,8 @@ const UNWINNABLE_HAND = ["2m", "3m", "4m", "5m", "6m", "7m", "8m", "2p", "3p", "
 
     const labelAfterDiscovery = await page.textContent("#attempt-label");
     assert(
-      labelAfterDiscovery.includes(`${attemptCount}/10`),
-      `[G3] 발견용 역 제출 후 시도 ${attemptCount}/10 표시 (실제 "${labelAfterDiscovery}")`
+      labelAfterDiscovery.includes(`${attemptCount}/${MAX_ATTEMPTS}`),
+      `[G3] 발견용 역 제출 후 시도 ${attemptCount}/${MAX_ATTEMPTS} 표시 (실제 "${labelAfterDiscovery}")`
     );
 
     const discoveryExpectedClass = discoveryColor === "green" ? "yaku-board-green" : "yaku-board-orange";
@@ -802,7 +802,7 @@ const UNWINNABLE_HAND = ["2m", "3m", "4m", "5m", "6m", "7m", "8m", "2p", "3p", "
   );
   const attemptLabelAfterWin = await page.textContent("#attempt-label");
   assert(
-    attemptLabelAfterWin.includes(`${attemptCount}/10`),
+    attemptLabelAfterWin.includes(`${attemptCount}/${MAX_ATTEMPTS}`),
     `${attemptCount}번째 시도에 성공 (시도 라벨: "${attemptLabelAfterWin}")`
   );
 
@@ -1075,19 +1075,19 @@ const UNWINNABLE_HAND = ["2m", "3m", "4m", "5m", "6m", "7m", "8m", "2p", "3p", "
   const afterClear = await page.$$eval("#current-guess-row .tile-slot:not(.is-empty)", (els) => els.length);
   assert(afterClear === 0, "전체 지우기 후 현재 손패 0장");
 
-  for (let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= MAX_ATTEMPTS; i++) {
     for (const tile of targetSorted) await page.click(`.tile-btn[data-tile="${tile}"]`);
     await page.click("#btn-submit");
     await page.waitForTimeout(60);
     const label = await page.textContent("#attempt-label");
-    assert(label.includes(`${i}/10`), `[I5] ${i}번째 제출 후 시도 ${i}/10 표시 (실제 "${label}")`);
-    if (i < 10) {
+    assert(label.includes(`${i}/${MAX_ATTEMPTS}`), `[I5] ${i}번째 제출 후 시도 ${i}/${MAX_ATTEMPTS} 표시 (실제 "${label}")`);
+    if (i < MAX_ATTEMPTS) {
       const stillPlaying = await page.evaluate(() => !document.querySelector(".current-input").hidden);
-      assert(stillPlaying, `[I5] ${i}번째 제출(10회 미만) 후에도 게임이 계속 진행 중`);
+      assert(stillPlaying, `[I5] ${i}번째 제출(${MAX_ATTEMPTS}회 미만) 후에도 게임이 계속 진행 중`);
     }
   }
   const endedAfterTen = await page.evaluate(() => document.querySelector(".current-input").hidden);
-  assert(endedAfterTen === true, "[I5/v14-항목1] 10번째 제출로 게임이 끝남(입력 영역이 숨겨짐, 10회 한도)");
+  assert(endedAfterTen === true, `[I5/v14-항목1] ${MAX_ATTEMPTS}번째 제출로 게임이 끝남(입력 영역이 숨겨짐, ${MAX_ATTEMPTS}회 한도)`);
 
   const loseStatusInfo = await page.evaluate(() => ({
     backdropHidden: document.getElementById("modal-backdrop").hidden,

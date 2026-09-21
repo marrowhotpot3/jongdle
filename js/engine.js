@@ -14,7 +14,7 @@ const STORAGE_KEYS = {
   introSeen: "jongdle:introSeen:v1",
 };
 
-const MAX_ATTEMPTS = 10;
+const MAX_ATTEMPTS = 8;
 const KST_OFFSET_MIN = 9 * 60;
 
 function todayKstString() {
